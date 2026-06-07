@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>For My Love 🤍</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=Lato:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --rose: #c9636a; --rose-light: #f0c4c7;
+    --rose-pale: #fdf0f1; --rose-dark: #7a2d33;
+    --cream: #faf6f0; --ink: #1a1215; --ink-muted: #6b5055;
+  }
+  html { scroll-behavior: smooth; }
+  body { font-family: 'Lato', sans-serif; background: var(--cream); color: var(--ink); min-height: 100vh; overflow-x: hidden; }
+
+  /* ══════════════════════════════
+     PASSWORD SCREEN
+  ══════════════════════════════ */
+  #password-screen {
+    position: fixed; inset: 0; z-index: 999;
+    background: #0d080a;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 2rem;
+    transition: opacity 1s ease, visibility 1s ease;
+    overflow: hidden;
+  }
+  #password-screen.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+
+  .pw-eyebrow { font-size: 0.72rem; font-weight: 300; letter-spacing: 0.3em; text-transform: uppercase; color: #7a5a60; }
+  .pw-title { font-family: 'Playfair Display', serif; font-size: clamp(2rem, 7vw, 4rem); font-weight: 400; color: #f5eaec; text-align: center; }
+  .pw-subtitle { font-family: 'Playfair Display', serif; font-style: italic; font-size: 1rem; color: #9a7a80; text-align: center; max-width: 340px; line-height: 1.6; }
+  .pw-box {
+    display: flex; flex-direction: column; align-items: center; gap: 1rem;
+    background: rgba(255,255,255,0.04); border: 1px solid #3a1a20;
+    border-radius: 6px; padding: 2rem 2.5rem; width: min(380px, 90vw);
+    transition: border-color 0.4s;
+  }
+  .pw-label { font-size: 0.72rem; letter-spacing: 0.2em; text-transform: uppercase; color: #7a5a60; }
+  .pw-date-input {
+    background: rgba(255,255,255,0.06); border: 1px solid #5a3a42;
+    border-radius: 4px; padding: 0.8rem 1.2rem; color: #f5eaec;
+    font-family: 'Lato', sans-serif; font-size: 1rem; width: 100%;
+    outline: none; transition: border-color 0.3s; color-scheme: dark;
+  }
+  .pw-date-input:focus { border-color: var(--rose); }
+  .pw-btn {
+    width: 100%; padding: 0.85rem; background: transparent;
+    border: 1px solid #5a3a42; color: #c9a0a8;
+    font-family: 'Lato', sans-serif; font-size: 0.78rem;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    cursor: pointer; border-radius: 4px;
+    transition: border-color 0.3s, color 0.3s, background 0.3s;
+  }
+  .pw-btn:hover { border-color: var(--rose); color: #f5eaec; background: rgba(201,99,106,0.1); }
+  .pw-error { font-size: 0.8rem; color: #e88a90; text-align: center; min-height: 1.2em; }
+
+  /* Falling hearts on password screen */
+  .pw-heart-float {
+    position: absolute; pointer-events: none;
+    animation: pwHeartFall linear infinite;
+  }
+  @keyframes pwHeartFall {
+    0%   { transform: translateY(-60px) rotate(0deg); opacity: 0; }
+    10%  { opacity: 0.6; }
+    90%  { opacity: 0.3; }
+    100% { transform: translateY(110vh) rotate(360deg); opacity: 0; }
+  }
+
+  /* ══════════════════════════════
+     MUSIC (hidden)
+  ══════════════════════════════ */
+  #music { display: none; }
+
+  /* ══════════════════════════════
+     MAIN CONTENT
+  ══════════════════════════════ */
+  #main { display: none; opacity: 0; transition: opacity 1.2s ease; }
+  #main.visible { display: block; opacity: 1; }
+
+  /* ══════════════════════════════
+     FLOATING HEARTS
+  ══════════════════════════════ */
+  .float-heart {
+    position: fixed; pointer-events: none; z-index: 9;
+    user-select: none; will-change: transform, opacity;
+  }
+  @keyframes heartRise {
+    0%   { transform: translateY(0) rotate(0deg) scale(0.8); opacity: 0; }
+    8%   { opacity: 1; }
+    85%  { opacity: 0.7; }
+    100% { transform: translateY(-110vh) rotate(30deg) scale(1.1); opacity: 0; }
+  }
+
+  /* ══════════════════════════════
+     "I LOVE YOU" FLOATING WORDS
+  ══════════════════════════════ */
+  .love-word {
+    position: fixed; pointer-events: none; z-index: 10;
+    font-family: 'Playfair Display', serif; font-style: italic;
+    color: var(--rose); white-space: nowrap;
+    text-shadow: 0 0 12px rgba(201,99,106,0.4);
+    will-change: transform, opacity;
+  }
+  @keyframes wordRise {
+    0%   { opacity: 0; transform: translateY(0) scale(0.85); }
+    12%  { opacity: 1; }
+    80%  { opacity: 0.8; }
+    100% { opacity: 0; transform: translateY(-115vh) scale(1); }
+  }
+
+  /* ══════════════════════════════
+     MUSIC BAR
+  ══════════════════════════════ */
+  #music-bar {
+    position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 50;
+    background: rgba(26, 12, 15, 0.88);
+    border: 1px solid rgba(201,99,106,0.3); border-radius: 30px;
+    padding: 0.6rem 1.2rem; display: none;
+    align-items: center; gap: 10px; color: #c9a0a8;
+    font-size: 0.72rem; letter-spacing: 0.1em; backdrop-filter: blur(8px);
+  }
+  #music-bar.show { display: flex; }
+  .music-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--rose); animation: pulse 1.5s ease infinite; }
+  @keyframes pulse { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.5);opacity:0.6} }
+
+  /* ══════════════════════════════
+     HERO
+  ══════════════════════════════ */
+  .hero {
+    min-height: 100vh; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; padding: 4rem 2rem;
+    position: relative;
+    background: linear-gradient(180deg, #fdf0f1 0%, var(--cream) 60%);
+    text-align: center; overflow: hidden;
+  }
+  .hero::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse 70% 50% at 50% 0%, rgba(201,99,106,0.12), transparent);
+    pointer-events: none;
+  }
+  .eyebrow { font-size: 0.7rem; font-weight: 300; letter-spacing: 0.3em; text-transform: uppercase; color: var(--rose); margin-bottom: 1.2rem; opacity: 0; animation: fadeUp 1s ease 0.4s forwards; }
+  .hero-name { font-family: 'Playfair Display', serif; font-size: clamp(4rem, 13vw, 9rem); font-weight: 700; line-height: 0.9; color: var(--ink); margin-bottom: 1.5rem; opacity: 0; animation: fadeUp 1.2s ease 0.6s forwards; }
+  .hero-name em { font-style: italic; color: var(--rose); }
+  .hero-tagline { font-family: 'Playfair Display', serif; font-size: clamp(1rem, 2.5vw, 1.35rem); font-style: italic; color: var(--ink-muted); max-width: 420px; line-height: 1.7; opacity: 0; animation: fadeUp 1.2s ease 0.9s forwards; }
+  .scroll-hint { position: absolute; bottom: 2.5rem; display: flex; flex-direction: column; align-items: center; gap: 8px; color: var(--rose-light); font-size: 0.65rem; letter-spacing: 0.2em; text-transform: uppercase; opacity: 0; animation: fadeUp 1s ease 1.8s forwards; }
+  .scroll-hint span { display: block; width: 1px; height: 40px; background: var(--rose-light); animation: scrollLine 1.8s ease infinite; }
+  @keyframes scrollLine { 0%{transform:scaleY(0);transform-origin:top} 50%{transform:scaleY(1);transform-origin:top} 50.01%{transform-origin:bottom} 100%{transform:scaleY(0);transform-origin:bottom} }
+
+  /* ══════════════════════════════
+     LETTER
+  ══════════════════════════════ */
+  .letter-section { padding: 8rem 2rem; display: flex; justify-content: center; }
+  .letter-card { max-width: 600px; width: 100%; position: relative; }
+  .letter-card::before { content: '"'; font-family: 'Playfair Display', serif; font-size: 14rem; line-height: 0.6; color: var(--rose-light); position: absolute; top: -2rem; left: -2rem; pointer-events: none; z-index: 0; opacity: 0.6; }
+  .letter-body { position: relative; z-index: 1; border-left: 1.5px solid var(--rose-light); padding-left: 2.5rem; }
+  .letter-label { font-size: 0.68rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--rose); margin-bottom: 2rem; display: block; }
+  .letter-body p { font-family: 'Playfair Display', serif; font-size: clamp(1.15rem, 2.5vw, 1.4rem); font-weight: 400; line-height: 1.9; color: var(--ink); margin-bottom: 1.6rem; }
+  .letter-sig { margin-top: 3rem; font-family: 'Playfair Display', serif; font-style: italic; font-size: 1.5rem; color: var(--rose-dark); }
+
+  /* ══════════════════════════════
+     QUESTION
+  ══════════════════════════════ */
+  .question-section { padding: 6rem 2rem 8rem; text-align: center; background: linear-gradient(180deg, var(--cream) 0%, #fdf0f1 100%); }
+  .question-text { font-family: 'Playfair Display', serif; font-size: clamp(1.8rem, 5vw, 3rem); font-weight: 400; color: var(--ink); margin-bottom: 3rem; line-height: 1.3; }
+  .btn-group { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+  .btn-yes { padding: 1rem 2.8rem; background: var(--rose); color: white; border: none; font-family: 'Lato', sans-serif; font-size: 0.8rem; letter-spacing: 0.15em; text-transform: uppercase; cursor: pointer; border-radius: 2px; transition: background 0.3s, transform 0.2s; }
+  .btn-yes:hover { background: var(--rose-dark); transform: translateY(-2px); }
+  .btn-no { padding: 1rem 2.8rem; background: transparent; color: var(--ink-muted); border: 1px solid var(--rose-light); font-family: 'Lato', sans-serif; font-size: 0.8rem; letter-spacing: 0.15em; text-transform: uppercase; cursor: pointer; border-radius: 2px; transition: border-color 0.3s, color 0.3s; }
+  .btn-no:hover { border-color: var(--rose); color: var(--rose); }
+
+  /* ══════════════════════════════
+     GALLERY WITH COMPLIMENTS
+  ══════════════════════════════ */
+  .gallery-section { padding: 6rem 2rem; text-align: center; }
+  .gallery-label { font-size: 0.68rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--rose); margin-bottom: 3rem; display: block; }
+  .gallery-grid { display: flex; flex-wrap: wrap; gap: 2.5rem; justify-content: center; max-width: 800px; margin: 0 auto; }
+
+  .photo-card {
+    flex: 1 1 220px; max-width: 260px;
+    display: flex; flex-direction: column; align-items: center; gap: 1rem;
+    position: relative;
+  }
+  .photo-card img {
+    width: 100%; aspect-ratio: 3/4; object-fit: cover;
+    border-radius: 4px;
+    filter: sepia(10%) brightness(0.97);
+    transition: filter 0.4s, transform 0.4s;
+    box-shadow: 0 8px 30px rgba(122,45,51,0.15);
+  }
+  .photo-card:hover img { filter: sepia(0%) brightness(1.03); transform: scale(1.03) rotate(-1deg); }
+  .photo-compliment {
+    font-family: 'Playfair Display', serif;
+    font-style: italic; font-size: 1rem;
+    color: var(--rose-dark); line-height: 1.5;
+    text-align: center; padding: 0 0.5rem;
+  }
+  .photo-compliment::before { content: '❝ '; color: var(--rose-light); }
+  .photo-compliment::after  { content: ' ❞'; color: var(--rose-light); }
+
+  /* ══════════════════════════════
+     OVERLAY
+  ══════════════════════════════ */
+  #overlay { position: fixed; inset: 0; z-index: 200; background: rgba(26,12,15,0.88); display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+  #overlay.open { display: flex; }
+  .overlay-card { background: var(--cream); border-radius: 4px; padding: 3.5rem 3rem; max-width: 380px; width: 90%; text-align: center; position: relative; border-top: 2px solid var(--rose); animation: cardPop 0.4s cubic-bezier(.34,1.56,.64,1) forwards; }
+  @keyframes cardPop { from{transform:scale(0.85);opacity:0} to{transform:scale(1);opacity:1} }
+  .overlay-title { font-family: 'Playfair Display', serif; font-size: 2rem; color: var(--ink); margin-bottom: 0.8rem; }
+  .overlay-msg { font-size: 0.85rem; color: var(--ink-muted); line-height: 1.7; margin-bottom: 1.8rem; }
+  .overlay-code { font-family: 'Lato', sans-serif; font-size: 0.75rem; letter-spacing: 0.2em; background: var(--rose-pale); border: 1px solid var(--rose-light); padding: 0.7rem 1.5rem; border-radius: 2px; display: inline-block; color: var(--rose-dark); margin-bottom: 2rem; }
+  .overlay-close { position: absolute; top: 1rem; right: 1.2rem; background: none; border: none; font-size: 1.2rem; color: var(--ink-muted); cursor: pointer; }
+  .overlay-close:hover { color: var(--ink); }
+
+  /* ══════════════════════════════
+     FOOTER
+  ══════════════════════════════ */
+  footer { padding: 4rem 2rem; text-align: center; border-top: 1px solid var(--rose-light); }
+  footer p { font-family: 'Playfair Display', serif; font-style: italic; font-size: 1rem; color: var(--ink-muted); }
+
+  @keyframes fadeUp { from{transform:translateY(20px);opacity:0} to{transform:translateY(0);opacity:1} }
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════
+     PASSWORD SCREEN
+════════════════════════════════════════ -->
+<div id="password-screen">
+  <div class="pw-eyebrow">A message for you</div>
+  <h1 class="pw-title">For <em style="color:#c9636a;">My Love</em></h1>
+  <p class="pw-subtitle">Enter our special date to open this letter 🤍</p>
+  <div class="pw-box" id="pw-box">
+    <span class="pw-label">Our date</span>
+    <input type="date" class="pw-date-input" id="pw-date" />
+    <button class="pw-btn" id="pw-btn">Open 🤍</button>
+    <p class="pw-error" id="pw-error"></p>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     MUSIC — AUTO-PLAYS ON UNLOCK
+     ↓↓ TO CHANGE THE SONG ↓↓
+     Replace the YouTube video ID inside startMusic() in the <script> below.
+     Search for: const YOUTUBE_VIDEO_ID
+════════════════════════════════════════ -->
+<div id="music"></div>
+<div id="music-bar">
+  <div class="music-dot"></div>
+  <!-- ↓ Change this song title text to match your song -->
+  Consume — Chase Atlantic
+</div>
+
+<!-- ════════════════════════════════════════
+     MAIN CONTENT
+════════════════════════════════════════ -->
+<div id="main">
+
+  <section class="hero">
+    <div class="eyebrow">A letter to me</div>
+    <h1 class="hero-name"><em>My Love</em></h1>
+    <p class="hero-tagline">There are things I should have said sooner. I'm saying them now.</p>
+    <div class="scroll-hint"><span></span>scroll</div>
+  </section>
+
+  <section class="letter-section">
+    <div class="letter-card">
+      <div class="letter-body">
+        <span class="letter-label">My letter to me</span>
+        <p>I've been sitting with this for a while, and I think the most honest thing I can do is just say it plainly — I haven't been showing up the way you deserve lately.</p>
+        <p>Not in the little things, not in the big ones. And you noticed, even when you didn't say it. That's the part that stays with me.</p>
+        <p>You are someone who gives her whole heart, quietly and without asking for anything back. And somewhere along the way I took that for granted. I'm not proud of that.</p>
+        <p>I don't want to just say sorry. I want to do better — actually, genuinely, consistently. You deserve that version of me, and I intend to be it.</p>
+        <div class="letter-sig">— my love 🤍</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="question-section">
+    <h2 class="question-text">Can you find it in your heart<br>to forgive me?</h2>
+    <div class="btn-group">
+      <button class="btn-yes" onclick="forgive()">I forgive you 🤍</button>
+      <button class="btn-no" onclick="needTime()">I need some time</button>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════
+       GALLERY — HOW TO ADD YOUR PICTURES:
+       1. Put your photo files (e.g. pic1.jpg, pic2.jpg, pic3.jpg)
+          in the SAME folder as this HTML file.
+       2. Replace "pic1.jpg", "pic2.jpg", "pic3.jpg" below with your actual filenames.
+       3. Edit the compliment text inside each <p class="photo-compliment"> tag.
+       4. To add more photos: copy a whole <div class="photo-card">...</div> block and paste it.
+  ════════════════════════════════════════ -->
+  <section class="gallery-section">
+    <span class="gallery-label">Our memories</span>
+    <div class="gallery-grid">
+
+      <!-- PHOTO 1 — replace pic1.jpg with your filename -->
+      <div class="photo-card">
+        <img src="pic1.jpg" alt="Memory 1">
+        <p class="photo-compliment">You are the most beautiful thing that has ever happened to me</p>
+      </div>
+
+      <!-- PHOTO 2 — replace pic2.jpg with your filename -->
+      <div class="photo-card">
+        <img src="pic2.jpg" alt="Memory 2">
+        <p class="photo-compliment">Every moment with you feels like a dream I never want to wake from</p>
+      </div>
+
+      <!-- PHOTO 3 — replace pic3.jpg with your filename -->
+      <div class="photo-card">
+        <img src="pic3.jpg" alt="Memory 3">
+        <p class="photo-compliment">You make my whole world brighter just by existing in it</p>
+      </div>
+
+    </div>
+  </section>
+
+  <footer>
+    <p>Made with sincerity, and a lot of love 🤍</p>
+  </footer>
+</div>
+
+<!-- OVERLAY -->
+<div id="overlay">
+  <div class="overlay-card">
+    <button class="overlay-close" onclick="closeOverlay()">✕</button>
+    <div class="overlay-title" id="overlayTitle"></div>
+    <p class="overlay-msg" id="overlayMsg"></p>
+    <div class="overlay-code" id="overlayCode" style="display:none"></div>
+  </div>
+</div>
+
+<script>
+/* ════════════════════════════════════════
+   SONG — CHANGE THE YOUTUBE VIDEO ID HERE
+   Go to YouTube, open your song, copy the part after "v=" in the URL.
+   Example: youtube.com/watch?v=oCdXuomafSU → ID is "oCdXuomafSU"
+════════════════════════════════════════ */
+const YOUTUBE_VIDEO_ID = 'oCdXuomafSU'; // ← PASTE YOUR SONG'S YOUTUBE ID HERE
+
+/* ════════════════════════════════════════
+   PASSWORD SCREEN — FALLING HEARTS
+════════════════════════════════════════ */
+const pwScreen = document.getElementById('password-screen');
+const pwEmojis = ['❤️','💕','💗','💓','💞','🩷'];
+for (let i = 0; i < 22; i++) {
+  const h = document.createElement('div');
+  h.classList.add('pw-heart-float');
+  h.textContent = pwEmojis[Math.floor(Math.random() * pwEmojis.length)];
+  h.style.cssText = `
+    left: ${Math.random() * 100}vw;
+    top: -40px;
+    font-size: ${10 + Math.random() * 16}px;
+    animation-duration: ${6 + Math.random() * 9}s;
+    animation-delay: ${Math.random() * 12}s;
+  `;
+  pwScreen.appendChild(h);
+}
+
+/* ════════════════════════════════════════
+   PASSWORD CHECK
+════════════════════════════════════════ */
+const CORRECT_DATE = '2024-06-27';
+
+function unlockSite() {
+  const input = document.getElementById('pw-date').value;
+  const errorEl = document.getElementById('pw-error');
+  const box = document.getElementById('pw-box');
+
+  if (!input) {
+    errorEl.textContent = 'Please select a date 🌷';
+    return;
+  }
+
+  if (input === CORRECT_DATE) {
+    errorEl.textContent = '';
+    pwScreen.classList.add('hidden');
+
+    const main = document.getElementById('main');
+    main.style.display = 'block';
+
+    // Double rAF ensures the display:block is painted before opacity transition starts
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      main.classList.add('visible');
+      startMusic();           // auto-launch music
+      spawnHearts();          // floating hearts
+      spawnLoveWords();       // "I love you" words
+    }));
+
+    setTimeout(() => {
+      document.getElementById('music-bar').classList.add('show');
+    }, 1800);
+
+  } else {
+    errorEl.textContent = "That's not our date… try again 💔";
+    box.style.borderColor = '#c9636a';
+    setTimeout(() => { box.style.borderColor = '#3a1a20'; }, 900);
+  }
+}
+
+document.getElementById('pw-btn').addEventListener('click', unlockSite);
+document.getElementById('pw-date').addEventListener('keydown', e => { if (e.key === 'Enter') unlockSite(); });
+
+/* ════════════════════════════════════════
+   MUSIC — AUTO-STARTS ON UNLOCK
+════════════════════════════════════════ */
+/* ── MUSIC ── */
+  /* Put your song.mp3 file in the same folder as this HTML file */
+  let musicStarted = false;
+  function startMusic(){
+    if(musicStarted) return;
+    musicStarted = true;
+    const audio = document.createElement('audio');
+    audio.src = 'song.mp3'; /* ← rename your file to song.mp3 or change this name */
+    audio.loop = true;
+    audio.volume = 0.8;
+    document.getElementById('music').appendChild(audio);
+    audio.play().catch(() => {
+      /* If browser blocks autoplay, play on next tap/click */
+      document.addEventListener('click', () => audio.play(), { once: true });
+    });
+  }
+
+/* ════════════════════════════════════════
+   FLOATING HEARTS
+════════════════════════════════════════ */
+const heartEmojis = ['❤️','💕','💗','💓','💞','🩷','💝','🌹'];
+
+function spawnHearts() {
+  function makeHeart() {
+    const h = document.createElement('div');
+    h.classList.add('float-heart');
+    const size = 16 + Math.random() * 22;
+    const dur  = 7 + Math.random() * 7;
+    const startX = Math.random() * 100; // vw
+    h.textContent = heartEmojis[Math.floor(Math.random() * heartEmojis.length)];
+    h.style.cssText = `
+      left: ${startX}vw;
+      bottom: -60px;
+      font-size: ${size}px;
+      animation: heartRise ${dur}s ease-in forwards;
+    `;
+    document.body.appendChild(h);
+    setTimeout(() => h.remove(), dur * 1000 + 200);
+  }
+
+  // Burst of hearts right away
+  for (let i = 0; i < 12; i++) {
+    setTimeout(makeHeart, i * 120);
+  }
+  // Then keep going
+  setInterval(makeHeart, 450);
+}
+
+/* ════════════════════════════════════════
+   "I LOVE YOU" FLOATING WORDS — FIXED
+   Uses a one-shot animation (forwards) so
+   opacity actually goes 0→1→0 and is visible.
+════════════════════════════════════════ */
+const loveMessages = [
+  'I love you', 'I love you ❤️', 'mezyanti',
+  'mtarma ;)', 'b amout fiki', 'da7dou7ti',
+  'twaheshtk', '3zizti', 'Benti'
+];
+
+function spawnLoveWords() {
+  function makeWord() {
+    const el = document.createElement('div');
+    el.classList.add('love-word');
+    const dur  = 10 + Math.random() * 8;
+    const size = 0.8 + Math.random() * 0.9;
+    el.textContent = loveMessages[Math.floor(Math.random() * loveMessages.length)];
+    el.style.cssText = `
+      left: ${5 + Math.random() * 82}vw;
+      bottom: -60px;
+      font-size: ${size}rem;
+      opacity: 0;
+      animation: wordRise ${dur}s ease-in forwards;
+    `;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), dur * 1000 + 200);
+  }
+
+  // Small delay then keep spawning
+  setTimeout(() => {
+    makeWord();
+    setInterval(makeWord, 2200);
+  }, 1000);
+}
+
+/* ════════════════════════════════════════
+   OVERLAY (forgive / need time)
+════════════════════════════════════════ */
+function showOverlay(title, msg, code) {
+  document.getElementById('overlayTitle').textContent = title;
+  document.getElementById('overlayMsg').textContent = msg;
+  const codeEl = document.getElementById('overlayCode');
+  if (code) { codeEl.textContent = code; codeEl.style.display = 'inline-block'; }
+  else { codeEl.style.display = 'none'; }
+  document.getElementById('overlay').classList.add('open');
+}
+function closeOverlay() { document.getElementById('overlay').classList.remove('open'); }
+
+function forgive() {
+  showOverlay('Thank you, my love 🤍', 'This means everything to me.', 'EMNA-7281');
+}
+function needTime() {
+  showOverlay('I understand 🌷', "Take all the time you need. I'm not going anywhere, and this message will still be here whenever you're ready.", null);
+}
+
+document.getElementById('overlay').addEventListener('click', function(e) {
+  if (e.target === this) closeOverlay();
+});
+</script>
+
+</body>
+</html>
